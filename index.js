@@ -1,7 +1,7 @@
 const PORT = 80;
 const client_id = "2154860972.7457169668";
 
-const BASE_URL = "http://67f8aa3e.ngrok.io";
+const BASE_URL = "http://92f97668.ngrok.io";
 const redirect_uri = BASE_URL+"/oauthcallback";
 
 var config = require('config.json')('./config.json');
@@ -20,7 +20,6 @@ var cookieParser = require('cookie-parser')
 
 var express = require('express');
 var logger = require('morgan');
-var config = require('morgan');
 
 var app = express();
 
@@ -43,6 +42,69 @@ app.get('/', function(req, res){
   });
 });
 
+app.get('/bot/:id/messages', function(req, res){
+  flatfile.db('data.json', function( err, json_data ){
+
+    //check to see if the user is ok
+    if( json_data.cookies.hasOwnProperty(req.cookies.cookie )){
+
+      //get a token
+      var token = json_data.keys.pop();
+
+      var slack_req = {
+        token : token
+      };
+
+      var slack_history_req = {
+        token : token
+        //channel : req.params.id
+      };
+
+      Slack.im.list(slack_req, function (error, data) {
+
+        if( error || data.ims === undefined ) throw error;
+
+        var channels = [];
+
+        for( var channelIndex in data.ims ){
+          if( data.ims.hasOwnProperty( channelIndex ) ){
+            var channel = data.ims[channelIndex]
+            if( channel.is_user_deleted == false ){
+              channels.push( channel.id );
+            }
+          }
+        }
+
+        var messages = [];
+        var channelCount = 0;
+
+        //for each person get a history of their messages
+        for( var i=0; i< channels.length; i++ ){
+
+          slack_history_req.channel = channels[i];
+
+          Slack.im.history(slack_history_req, function (error, data) {
+            if( error ) throw error;
+
+              if( data["messages"].length > 0 ){
+                messages.push( data );
+              }
+              channelCount++;
+
+              if( channelCount == channels.length ){
+                //res.json( messages );
+                res.send(messages);
+              }
+          });
+        }
+      });
+    }else{
+      res.sendStatus(403);
+      //res.redirect('/');
+    }
+  });
+});
+
 app.get('/bots', function(req, res){
   flatfile.db('data.json', function( err, json_data ){
 
@@ -54,6 +116,7 @@ app.get('/bots', function(req, res){
         var users = data.members;
 
         var bot_users = [];
+        var bot_users_html = "<ul>";
 
         for (var key in data.members) {
           var user = data.members[key];
@@ -61,11 +124,14 @@ app.get('/bots', function(req, res){
           if (data.members.hasOwnProperty(key)) {
             if( user.is_bot == true && user.name.match(/ga-surveybot/g) ){
               bot_users.push( user );
+              bot_users_html +='<li>' +
+                                  '<p><a href="/bot/'+user.id+'/messages">'+user.name+'</p>'+
+                                '</li>';
             }
           }
         }
 
-        res.send(bot_users);
+        res.send(bot_users_html);
       });
     }else{
       res.redirect('/');
@@ -79,10 +145,12 @@ app.get('/oauthcallback', function(req, res){
 
   var options = {
     client_id : client_id,
-    client_secret : config.client_secret,
+    client_secret : config.slack.client_secret,
     code : code,
     redirect_uri : redirect_uri
   };
+
+  console.log( options );
 
   Slack.oauth.access(options, function(err, data){
     if( err ) throw err;
@@ -126,3 +194,7 @@ var cookieHash = function( req ){
   var salt = "jhk*&^*&sdf^SDF%@dfg%^dsDFfgSD$!kdgfuKJKhUjhSDfkhkjh";
   return sha1( new Date().getTime() + req.headers.accept + req.headers['user-agent'] + req.headers.host + salt );
 };
+
+/*
+[Objectcolor: "d1707d"deleted: falsehas_files: falseid: "U06RLCX08"is_admin: falseis_bot: trueis_owner: falseis_primary_owner: falseis_restricted: falseis_ultra_restricted: falsename: "ga-surveybot-test"profile: Objectbot_id: "B06RLGZ1S"image_24: "https://s3-us-west-2.amazonaws.com/slack-files2/avatars/2015-06-25/6870641345_d9c014b59ae8e5058858_24.jpg"image_32: "https://s3-us-west-2.amazonaws.com/slack-files2/avatars/2015-06-25/6870641345_d9c014b59ae8e5058858_32.jpg"image_48: "https://s3-us-west-2.amazonaws.com/slack-files2/avatars/2015-06-25/6870641345_d9c014b59ae8e5058858_48.jpg"image_72: "https://s3-us-west-2.amazonaws.com/slack-files2/avatars/2015-06-25/6870641345_d9c014b59ae8e5058858_72.jpg"image_192: "https://s3-us-west-2.amazonaws.com/slack-files2/avatars/2015-06-25/6870641345_d9c014b59ae8e5058858_192.jpg"image_original: "https://s3-us-west-2.amazonaws.com/slack-files2/avatars/2015-06-25/6870641345_d9c014b59ae8e5058858_original.jpg"real_name: ""real_name_normalized: ""title: "testing survey app"__proto__: Objectreal_name: ""status: nulltz: nulltz_label: "Pacific Daylight Time"tz_offset: -25200__proto__: Object
+*/
