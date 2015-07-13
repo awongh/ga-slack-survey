@@ -1,8 +1,8 @@
 const PORT = 80;
 const client_id = "2154860972.7457169668";
 
-const BASE_URL = "http://92f97668.ngrok.io";
-const redirect_uri = BASE_URL+"/oauthcallback";
+const BASE_URL = "http://abaed261.ngrok.io";
+const redirect_uri = BASE_URL+"/auth/slack/callback";
 
 var config = require('config.json')('./config.json');
 
@@ -21,11 +21,72 @@ var cookieParser = require('cookie-parser')
 var express = require('express');
 var logger = require('morgan');
 
+var session = require('express-session')
+var passport = require('passport')
+var SlackStrategy = require('passport-slack').Strategy;
+var bodyParser = require('body-parser')
+
 var app = express();
 
 app.use(logger('dev'));
 app.use(express.static('public'));
 app.use(cookieParser())
+
+app.use(bodyParser());
+
+app.use(session({ secret: 'keyboard cat' }));
+
+app.use(passport.initialize());
+app.use(passport.session());
+
+function getUser( slackProfile, callback ){
+  callback(null, { id:slackProfile.id });
+}
+
+passport.use(new SlackStrategy({
+    clientID: client_id,
+    clientSecret: config.slack.client_secret
+  },
+  function(accessToken, refreshToken, profile, done) {
+      console.log("WUT");
+      getUser(profile, function(err,user){
+        return done(err, user);
+      });
+  }
+));
+
+
+// seralize and deseralize
+passport.serializeUser(function(user, done) {
+  console.log('serializeUser: ' + user._id)
+  done(null, user._id);
+});
+passport.deserializeUser(function(id, done) {
+  done(null, {fid:5});
+});
+
+app.get('/login', 
+  passport.authenticate('slack', { failureRedirect: '/login' }),
+  function(req, res) {
+    // Successful authentication, redirect home.
+    res.redirect('/');
+});
+
+app.get('/yourmom', ensureAuthenticated, function(req, res){
+    res.send('WE ARE LOGGED IN GUYSSSS');
+});
+
+app.get('/auth/slack',
+  passport.authorize('slack'));
+
+app.get('/auth/slack/callback', 
+  passport.authorize('slack', { failureRedirect: '/login' }),
+  function(req, res) {
+    console.log( "DID IT GUYZZZ" );
+    // Successful authentication, redirect home.
+    //res.send( "HERE" );
+    res.redirect('/');
+});
 
 app.get('/', function(req, res){
 
@@ -195,6 +256,7 @@ var cookieHash = function( req ){
   return sha1( new Date().getTime() + req.headers.accept + req.headers['user-agent'] + req.headers.host + salt );
 };
 
-/*
-[Objectcolor: "d1707d"deleted: falsehas_files: falseid: "U06RLCX08"is_admin: falseis_bot: trueis_owner: falseis_primary_owner: falseis_restricted: falseis_ultra_restricted: falsename: "ga-surveybot-test"profile: Objectbot_id: "B06RLGZ1S"image_24: "https://s3-us-west-2.amazonaws.com/slack-files2/avatars/2015-06-25/6870641345_d9c014b59ae8e5058858_24.jpg"image_32: "https://s3-us-west-2.amazonaws.com/slack-files2/avatars/2015-06-25/6870641345_d9c014b59ae8e5058858_32.jpg"image_48: "https://s3-us-west-2.amazonaws.com/slack-files2/avatars/2015-06-25/6870641345_d9c014b59ae8e5058858_48.jpg"image_72: "https://s3-us-west-2.amazonaws.com/slack-files2/avatars/2015-06-25/6870641345_d9c014b59ae8e5058858_72.jpg"image_192: "https://s3-us-west-2.amazonaws.com/slack-files2/avatars/2015-06-25/6870641345_d9c014b59ae8e5058858_192.jpg"image_original: "https://s3-us-west-2.amazonaws.com/slack-files2/avatars/2015-06-25/6870641345_d9c014b59ae8e5058858_original.jpg"real_name: ""real_name_normalized: ""title: "testing survey app"__proto__: Objectreal_name: ""status: nulltz: nulltz_label: "Pacific Daylight Time"tz_offset: -25200__proto__: Object
-*/
+function ensureAuthenticated(req, res, next) {
+  if (req.isAuthenticated()) { return next(); }
+  res.redirect('/login')
+}
