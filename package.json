@@ -21,6 +21,8 @@
     "passport-slack": "0.0.2",
     "express-session": "~1.11.3",
     "passport": "~0.2.2",
-    "body-parser": "~1.13.2"
+    "body-parser": "~1.13.2",
+    "connect-redis": "~2.4.0",
+    "method-override": "~2.3.4"
   }
 }
