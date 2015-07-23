@@ -106,46 +106,7 @@ function setUser(profile, cb){
 }
 
 app.get('/login', 
-  passport.authenticate('slack', { failureRedirect: '/loginfail' }),
-  function(req, res) {
-    // Successful authentication, redirect home.
-    // res.redirect('/');
-    console.log( "GGUUUYSSZZZZZ WHAT DOES THIS EVEN DOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO");
-    getOrSetUser(req.user.id, function(err,user){
-      if( !err ){
-        //req.user = user;
-      }
-      req.logIn(user, function (err) {
-        if(!err){
-          //res.redirect('/account');
-          res.send('worked');
-        }else{
-          res.send('error with req.logIn');
-          console.log( err );
-          //handle error
-        }
-      })
-    });
-
-
-    /*
-    console.log( "AUTHENTICATE: ############################################", req.user );
-
-    getOrSetUser(req.user.id, function(err,user){
-      if( !err ){
-        req.user = user;
-      }
-      res.redirect('/');
-    });
-
-    getUser( id, function(err, user){
-      if( !err ){
-        req.user = user;
-      }
-      res.redirect('/');
-    });
-    */
-});
+  passport.authenticate('slack', { failureRedirect: '/loginfail' }) );
 
 app.get('/yourmom', ensureAuthenticated, function(req, res){
     res.send('WE ARE LOGGED IN GUYSSSS');
