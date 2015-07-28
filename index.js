@@ -1,5 +1,5 @@
 const PORT = 80;
-const client_id = "2154860972.7457169668";
+const client_id = "2154860972.8331037539";
 
 var express = require('express')
   , passport = require('passport')
@@ -99,7 +99,7 @@ var debug_channels = require('./channels.js');
 app.get('/channels', ensureAuthenticated, function(req, res){
   //debug!!!!
   res.send(debug_channels.channels);
-  return
+  return;
   //end debug!!!!
 
   if( !req.user || !req.user.id ){
@@ -112,8 +112,8 @@ app.get('/channels', ensureAuthenticated, function(req, res){
 
       if( error ) throw error;
 
-      //res.json( data.channels );
-      res.send(data.channels);
+      res.json( data.channels );
+      //res.send(data.channels);
     });
   });
 
@@ -121,7 +121,8 @@ app.get('/channels', ensureAuthenticated, function(req, res){
 
 //test api channel
 //http://e5d76290.ngrok.io/messages/C06SUUTNJ
-app.get('/messages/:channel_id', ensureAuthenticated, function(req, res){
+//app.get('/messages/:channel_id', ensureAuthenticated, function(req, res){
+app.get('/messages/:channel_id', function(req, res){
 
   var channel_id = req.params.channel_id;
 
