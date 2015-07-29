@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.5/css/bootstrap-theme.css">
+    <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.5/css/bootstrap.css">
+    <link rel="stylesheet" type="text/css" href="/style.css">
+
+    <script src="http://cdnjs.cloudflare.com/ajax/libs/jquery/2.1.1/jquery.js"></script>
+    <script src="http://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.7.0/underscore.js"></script>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/backbone.js/1.2.1/backbone.js"></script>
+
+    <script src="http://cdnjs.cloudflare.com/ajax/libs/handlebars.js/2.0.0/handlebars.js"></script>
+  </head>
+  <body>
+    <div id="container" class="container-fluid">
+      <section id="messagesapp">
+        <header id="header">
+          <h1>Messages</h1>
+          <!-- <input id="new-todo" placeholder="What needs to be done?"> -->
+        </header>
+        <section id="main">
+          <ul id="messages-list"></ul>
+        </section>
+      </section>
+    </div>
+
+    <template id='channel-template'>
+      <ul class="channels-list">
+        {{#each collection}}
+          <li>{{this.name}}</li>
+        {{/each}}
+      </ul>
+    </template>
+
+    <script src="/app.js"></script>
+  </body>
+</html>

@@ -65,6 +65,7 @@ app.use(cookieParser());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(methodOverride());
+app.use(express.static('public'));
 
 app.use(session({
     secret: 'keylkjlkjlkjboard cat',
@@ -96,9 +97,10 @@ app.get('/loginredirect', ensureAuthenticated, function(req, res){
 });
 
 var debug_channels = require('./channels.js');
-app.get('/channels', ensureAuthenticated, function(req, res){
+app.get('/channels', function(req, res){
+//app.get('/channels', ensureAuthenticated, function(req, res){
   //debug!!!!
-  res.send(debug_channels.channels);
+  res.json(debug_channels.channels);
   return;
   //end debug!!!!
 
