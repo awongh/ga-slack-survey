@@ -25,13 +25,22 @@
       </section>
     </div>
 
-    <template id='channel-template'>
+    <template id='channels-template'>
       <ul class="channels-list">
         {{#each collection}}
-          <li>{{this.name}}</li>
+        <li>
+          <button id="{{this.id}}" class="getmessages">{{this.name}}</button>
+        </li>
         {{/each}}
       </ul>
     </template>
+
+    <template id='channel-template'>
+      <li>
+        <button id="{{this.id}}" class="getmessages">{{this.name}}</button>
+      </li>
+    </template>
+
 
     <script src="/app.js"></script>
   </body>

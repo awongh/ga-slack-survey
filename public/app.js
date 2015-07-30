@@ -25,11 +25,6 @@ app.MessageListView = Backbone.View.extend({
   }
 });
 
-
-
-
-
-
 app.Channel = Backbone.Model.extend ({
   initialize: function () {
     console.log("New Model Created Bro");
@@ -45,22 +40,21 @@ app.ChannelListView = Backbone.View.extend({
 
   el: '#container',
   initialize: function(){
-    this.channelTemplate = Handlebars.compile($('#channel-template').html());
+    this.channelTemplate = Handlebars.compile($('#channels-template').html());
     //this.render();
   },
   render: function(){
     var collectionData = app.channels.toJSON();
     var renderedTemplate = this.channelTemplate({collection:collectionData});
     this.$el.html(renderedTemplate);
+  },
+  getmessages : function(e){
+    var id = e.target.id;
+  },
+  events: {
+    'click .getmessages': 'getmessages'
   }
 });
-
-
-
-
-
-
-
 
 $(function(){
 
