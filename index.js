@@ -84,16 +84,12 @@ app.use(express.static('public'));
 app.get('/login',
   passport.authenticate('slack', { failureRedirect: '/loginfail' }) );
 
-app.get('/yourmom', ensureAuthenticated, function(req, res){
-    res.send('WE ARE LOGGED IN GUYSSSS');
-});
-
 app.get('/loginfail', function(req, res){
     res.send('guys, the login failed, faliure redirect in oauth');
 });
 
 app.get('/loginredirect', ensureAuthenticated, function(req, res){
-  res.send('this is where we are now guyz');
+  res.send('login worked after slack, guyz');
 });
 
 var debug_channels = require('./channels.js');
@@ -124,9 +120,12 @@ app.get('/channels', function(req, res){
 //test api channel
 //http://e5d76290.ngrok.io/messages/C06SUUTNJ
 //app.get('/messages/:channel_id', ensureAuthenticated, function(req, res){
-app.get('/messages/:channel_id', function(req, res){
+app.get('/channels/:channel_id', function(req, res){
 
   var channel_id = req.params.channel_id;
+
+  //debug
+  //var channel_id = 'C06SUUTNJ';
 
   redisClient.lrange(channel_id, 0, 100, function( err, reply ){
     if( err ) throw err;
@@ -135,7 +134,7 @@ app.get('/messages/:channel_id', function(req, res){
       return JSON.parse(obj);
     });
 
-    res.send( object_array );
+    res.send( { messages: object_array } );
   });
 });
 
@@ -209,6 +208,13 @@ app.get('/auth/slack/callback',
 
   }
 );
+
+//app.get('/', ensureAuthenticated, function( req, res ){
+app.get('/', function( req, res ){
+  res.sendfile('./public/app.html');
+});
+
+
 
 var server = app.listen(PORT, function () {
 
