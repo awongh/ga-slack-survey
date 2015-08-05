@@ -1,4 +1,3 @@
-const PORT = 80;
 const client_id = "2154860972.8331037539";
 
 /*
@@ -333,7 +332,7 @@ function setUser(profile, cb){
             /*                LISTEN ON TH PORT!!1!!            */
 /////////////////////////////////////////////////////////////////////////////////
 
-var server = app.listen(PORT, function () {
+var server = app.listen(process.env.PORT, function () {
 
   var host = server.address().address;
   var port = server.address().port;
