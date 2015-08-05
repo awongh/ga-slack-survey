@@ -40,21 +40,14 @@ passport.deserializeUser(function(user, done) {
   done(null, user);
 });
 
+//passport strategy
 passport.use(new SlackStrategy({
     clientID: client_id,
     clientSecret: config.slack.client_secret,
     scope : "read",
     passReqToCallback: true
   },
-  function(req, accessToken, refreshToken, profile, done) {
-    getOrSetUser(profile, function(err,user){
-
-      setToken( user.id, accessToken );
-
-      req.user = user;
-      done(err, user);
-    });
-  }
+  myAuthCallback
 ));
 
 var app = express();
@@ -80,17 +73,17 @@ app.use(express.static('public'));
 /////////////////////////////////////////////////////////////////////////////////
 /*                END USE                */
 /////////////////////////////////////////////////////////////////////////////////
+//
 
-app.get('/login',
-  passport.authenticate('slack', { failureRedirect: '/loginfail' }) );
-
-app.get('/loginfail', function(req, res){
-    res.send('guys, the login failed, faliure redirect in oauth');
+app.get('/', ensureAuthenticated, function( req, res ){
+//app.get('/', function( req, res ){
+  res.sendfile('./public/app.html');
 });
 
-app.get('/loginredirect', ensureAuthenticated, function(req, res){
-  res.send('login worked after slack, guyz');
-});
+
+/////////////////////////////////////////////////////////////////////////////////
+/*                START API METHODS  */
+/////////////////////////////////////////////////////////////////////////////////
 
 var debug_channels = require('./channels.js');
 app.get('/channels', function(req, res){
@@ -111,7 +104,6 @@ app.get('/channels', function(req, res){
       if( error ) throw error;
 
       res.json( data.channels );
-      //res.send(data.channels);
     });
   });
 
@@ -125,7 +117,7 @@ app.get('/channels/:channel_id', function(req, res){
   var channel_id = req.params.channel_id;
 
   //debug
-  //var channel_id = 'C06SUUTNJ';
+  var channel_id = 'C06SUUTNJ';
 
   redisClient.lrange(channel_id, 0, 100, function( err, reply ){
     if( err ) throw err;
@@ -134,9 +126,35 @@ app.get('/channels/:channel_id', function(req, res){
       return JSON.parse(obj);
     });
 
-    res.send( { messages: object_array } );
+    res.json( { messages: object_array } );
   });
 });
+
+
+/////////////////////////////////////////////////////////////////////////////////
+/*                END API REQUESTS */
+/////////////////////////////////////////////////////////////////////////////////
+
+app.get('/slacklogin',
+  passport.authenticate('slack', { failureRedirect: '/login?m='+'slack login failed' }) );
+
+app.get('/login', function(req, res){
+    var message = req.query.m;
+    //this is the login page
+    res.send('guys, the login failed, faliure redirect in oauth');
+});
+
+app.get('/loginredirect', ensureAuthenticated, function(req, res){
+  res.send('login worked after slack, guyz');
+});
+
+/////////////////////////////////////////////////////////////////////////////////
+/*                END LOGIN REDIRECTS   */
+/////////////////////////////////////////////////////////////////////////////////
+
+/////////////////////////////////////////////////////////////////////////////////
+/*                START SLACK POST METHOD  */
+/////////////////////////////////////////////////////////////////////////////////
 
 app.post('/slash', function( req, res ){
   /*
@@ -182,10 +200,18 @@ app.post('/slash', function( req, res ){
   }
 });
 
+/////////////////////////////////////////////////////////////////////////////////
+/*                END SLACK POST METHOD  */
+/////////////////////////////////////////////////////////////////////////////////
+
+/////////////////////////////////////////////////////////////////////////////////
+/*                START OAUTH API THINGS */
+/////////////////////////////////////////////////////////////////////////////////
+
 app.get('/auth/slack/callback',
   passport.authorize(
     'slack',
-    { failureRedirect: '/loginfail' }
+    { failureRedirect: '/login?m='+'passport auth login failed' }
   ),
   function(req, res) {
     console.log( "DID IT GUYZZZ", req.user );
@@ -194,41 +220,44 @@ app.get('/auth/slack/callback',
       getUser( req.user.id , function(err,user){
         req.logIn(user, function (err) {
           if(!err){
-            res.redirect('/loginredirect');
+            res.redirect('/');
           }else{
-            res.send('error with req.logIn');
+            res.redirect('/login?m='+'user not found error')
           }
         })
       });
 
     }else{
-
-      res.send("callback didn\'t work, user wasn't passed in request")
+      res.redirect('/login?m='+'oauth redirect request error')
     }
-
   }
 );
 
-//app.get('/', ensureAuthenticated, function( req, res ){
-app.get('/', function( req, res ){
-  res.sendfile('./public/app.html');
-});
-
-
-
-var server = app.listen(PORT, function () {
-
-  var host = server.address().address;
-  var port = server.address().port;
-
-  console.log('app listening at http://%s:%s', host, port);
-});
-
 function ensureAuthenticated(req, res, next) {
   if (req.isAuthenticated()) { return next(); }
-  //res.redirect('/loginfail')
-  res.send("couldn't authorize you for this, sorry");
+  res.redirect('/login?m='+'not authorized')
 }
+
+/******************************************************************************/
+/***********                   SLACK AUTH CALLBACK                  ***********/
+/******************************************************************************/
+
+var myAuthCallback = function(req, accessToken, refreshToken, profile, done) {
+  //the user has returned from slack, set some things, maybe
+  getOrSetUser(profile, function(err,user){
+
+    setToken( user.id, accessToken );
+
+    req.user = user;
+    done(err, user);
+  });
+};
+
+/******************************************************************************/
+
+/////////////////////////////////////////////////////////////////////////////////
+/*                END OAUTH API THINGS */
+/////////////////////////////////////////////////////////////////////////////////
 
 /////////////////////////////////////////////////////////////////////////////////
 /*                REDIS STUFF */
@@ -281,3 +310,18 @@ function setUser(profile, cb){
 
   cb( null, profile );
 }
+
+/////////////////////////////////////////////////////////////////////////////////
+/*                END REDIS STUFF */
+/////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////
+            /*                LISTEN ON TH PORT!!1!!            */
+/////////////////////////////////////////////////////////////////////////////////
+
+var server = app.listen(PORT, function () {
+
+  var host = server.address().address;
+  var port = server.address().port;
+
+  console.log('app listening at http://%s:%s', host, port);
+});

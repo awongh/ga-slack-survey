@@ -11,12 +11,31 @@ app.ChannelList = Backbone.Collection.extend({
   url : '/channels'
 });
 
+app.messagesView = Backbone.View.extend({
+
+  initialize: function(){
+    this.messageTemplate = Handlebars.compile($('#message-template').html());
+  },
+
+  render: function(){
+
+    var that = this;
+
+    $.each( this.model.get('messages'), function( i, v ){
+
+      var renderedTemplate = that.messageTemplate(v)
+
+      $('#messages-list').append( renderedTemplate );
+    });
+  }
+
+});
+
 app.ChannelView = Backbone.View.extend({
 
   tagName : 'li',
   initialize: function(){
     this.channelTemplate = Handlebars.compile($('#channel-template').html());
-    this.messageTemplate = Handlebars.compile($('#message-template').html());
   },
   getmessages : function(e){
     app.router.navigate("channels/"+this.model.id, {trigger: true});
@@ -30,20 +49,7 @@ app.ChannelView = Backbone.View.extend({
     var data = this.model.toJSON();
     var renderedTemplate = this.channelTemplate(data)
     this.$el.append(renderedTemplate);
-  },
-
-  renderMessages : function(){
-
-    var that = this;
-
-    $.each( this.model.get('messages'), function( i, v ){
-
-      var renderedTemplate = that.messageTemplate(v)
-
-      $('#messages-list').append( renderedTemplate );
-    });
   }
-
 });
 
 app.ChannelListView = Backbone.View.extend({
@@ -81,8 +87,8 @@ app.Router = Backbone.Router.extend({
       },
       success : function( model, response ){
         console.log( model );
-        var c = new app.ChannelView( { model: model } )
-        c.renderMessages();
+        var c = new app.messagesView( { model: model } )
+        c.render();
       }
     });
 
@@ -111,5 +117,5 @@ app.Router = Backbone.Router.extend({
 $(function(){
   app.router = new app.Router;
   Backbone.history.start({pushState: true});
-  app.router.navigate("channels", {trigger: true});
+  //app.router.navigate("channels", {trigger: true});
 });
