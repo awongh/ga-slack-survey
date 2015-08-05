@@ -222,7 +222,7 @@ app.post('/slash', function( req, res ){
 /*                START OAUTH API THINGS */
 /////////////////////////////////////////////////////////////////////////////////
 
-app.get('/auth/slack/callback',
+app.get('/authCallback',
   passport.authorize(
     'slack',
     { failureRedirect: '/login?m='+'passport auth login failed' }
