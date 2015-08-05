@@ -55,6 +55,24 @@ passport.deserializeUser(function(user, done) {
 });
 
 //passport strategy
+
+/******************************************************************************/
+/***********                   SLACK AUTH CALLBACK                  ***********/
+/******************************************************************************/
+
+var myAuthCallback = function(req, accessToken, refreshToken, profile, done) {
+  //the user has returned from slack, set some things, maybe
+  getOrSetUser(profile, function(err,user){
+
+    setToken( user.id, accessToken );
+
+    req.user = user;
+    done(err, user);
+  });
+};
+
+/******************************************************************************/
+
 passport.use(new SlackStrategy({
     clientID: client_id,
     clientSecret: process.env.SLACK_CLIENT_SECRET,
@@ -251,23 +269,6 @@ function ensureAuthenticated(req, res, next) {
   if (req.isAuthenticated()) { return next(); }
   res.redirect('/login?m='+'not authorized')
 }
-
-/******************************************************************************/
-/***********                   SLACK AUTH CALLBACK                  ***********/
-/******************************************************************************/
-
-var myAuthCallback = function(req, accessToken, refreshToken, profile, done) {
-  //the user has returned from slack, set some things, maybe
-  getOrSetUser(profile, function(err,user){
-
-    setToken( user.id, accessToken );
-
-    req.user = user;
-    done(err, user);
-  });
-};
-
-/******************************************************************************/
 
 /////////////////////////////////////////////////////////////////////////////////
 /*                END OAUTH API THINGS */
