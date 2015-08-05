@@ -23,6 +23,7 @@
     "passport": "~0.2.2",
     "body-parser": "~1.13.2",
     "connect-redis": "~2.4.0",
-    "method-override": "~2.3.4"
+    "method-override": "~2.3.4",
+    "url": "~0.10.3"
   }
 }

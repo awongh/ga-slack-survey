@@ -1,27 +1,42 @@
 const PORT = 80;
 const client_id = "2154860972.8331037539";
 
+/*
+ *
+    === wherever this app is deployed, set these env vars ===
+
+                    SLACK_CLIENT_SECRET
+                    SLASH_CMD_TOKEN
+                    REDIS_URL
+ */
+
 var express = require('express')
   , passport = require('passport')
-  , util = require('util');
+  , util = require('util')
+  , url = require('url');
+
 
 var Slack = require('slack-api');
 
 var SlackStrategy = require('passport-slack').Strategy;
 
-var config = require('config.json')('./config.json');
-
+var redisURL = url.parse(process.env.REDIS_URL);
 var redis = require("redis"),
-    redisClient = redis.createClient();
+    redisClient = redis.createClient(redisURL.port, redisURL.hostname);
+
+if( redisURL.auth ){
+  redisClient.auth(redisURL.auth.split(":")[1]);
+}
 
 var logger = require('morgan');
 
 var session = require('express-session')
 
+
 var RedisStore = require('connect-redis')(session);
 var RD = new RedisStore({
-  host: '127.0.0.1',
-  port: 6379
+  host: redisURL.hostname,
+  port: redisURL.port
 });
 
 var bodyParser = require('body-parser')
@@ -43,7 +58,7 @@ passport.deserializeUser(function(user, done) {
 //passport strategy
 passport.use(new SlackStrategy({
     clientID: client_id,
-    clientSecret: config.slack.client_secret,
+    clientSecret: process.env.SLACK_CLIENT_SECRET,
     scope : "read",
     passReqToCallback: true
   },
@@ -171,7 +186,7 @@ app.post('/slash', function( req, res ){
 
   try{
 
-    if( req.body && req.body.token == config.slack.slash_command_token ){
+    if( req.body && req.body.token == process.env.SLASH_CMD_TOKEN ){
 
       var timestamp = (new Date).getTime();
       var user_id = req.body.user_id;

@@ -1,7 +1,0 @@
-{
-  "slack": {
-    "slash_command_token":"bar",
-    "client_secret":"foo",
-    "token" : "thingy"
-  }
-}
