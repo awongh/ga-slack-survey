@@ -100,12 +100,12 @@ app.get('/', ensureAuthenticated, function( req, res ){
 /*                START API METHODS  */
 /////////////////////////////////////////////////////////////////////////////////
 
-var debug_channels = require('./channels.js');
+//var debug_channels = require('./channels.js');
 app.get('/channels', function(req, res){
 //app.get('/channels', ensureAuthenticated, function(req, res){
   //debug!!!!
-  res.json(debug_channels.channels);
-  return;
+  //res.json(debug_channels.channels);
+  //return;
   //end debug!!!!
 
   if( !req.user || !req.user.id ){
