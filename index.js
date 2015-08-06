@@ -126,7 +126,7 @@ app.get('/channels', function(req, res){
 
   getToken( req.user.id, function(err, token){
 
-    Slack.channel.list({token:token}, function (error, data) {
+    Slack.group.list({token:token}, function (error, data) {
 
       if( error ) throw error;
 
