@@ -109,7 +109,10 @@ app.use(express.static('public'));
 //
 
 app.get('/', ensureAuthenticated, function( req, res ){
-//app.get('/', function( req, res ){
+  res.redirect('/bb');
+});
+
+app.get('/bb*', ensureAuthenticated, function( req, res ){
   res.sendFile("public/app.html", {"root": __dirname});
 });
 

@@ -38,7 +38,7 @@ app.ChannelView = Backbone.View.extend({
     this.channelTemplate = Handlebars.compile($('#channel-template').html());
   },
   getmessages : function(e){
-    app.router.navigate("channels/"+this.model.id, {trigger: true});
+    app.router.navigate("bb/channels/"+this.model.id, {trigger: true});
   },
 
   //move this into the single view
@@ -72,14 +72,12 @@ app.ChannelListView = Backbone.View.extend({
 app.Router = Backbone.Router.extend({
 
   routes: {
-    'channels' :        "channels",  // #search/kiwis
-    'channels/:id' :        "channel"  // #search/kiwis
+    'bb' :        "channels",  // #search/kiwis
+    'bb/channels' :        "channels",  // #search/kiwis
+    'bb/channels/:id' :        "channel"  // #search/kiwis
   },
 
-  channel : function( id ){
-    $('#channels-cont').hide();
-    $('#messages-list').show();
-    var that = this;
+  getChannel : function( id ){
 
     app.channels.get( id ).fetch({
       error : function(){
@@ -91,25 +89,52 @@ app.Router = Backbone.Router.extend({
         c.render();
       }
     });
-
   },
+
+  channel : function( id ){
+    $('#messages-list').empty();
+    $('#channels-list').hide();
+    $('#messages-list').show();
+    var that = this;
+
+    if( !app.channels || app.channels.size() > 0 ){
+      app.channels = app.channels || new app.ChannelList;
+
+      app.channelListView = app.channelListView || new app.ChannelListView( { el: '#channels-list', collection : app.channels } );
+
+      this.getChannels( function( model, response ){
+        that.getChannel( id );
+      });
+
+      return;
+    }
+
+    this.getChannel( id );
+  },
+
+  getChannels : function( cb ){
+    app.channels.fetch({
+      error : function(){
+        console.log( "ERROR BITCHES" );
+      },
+      success : function( model, response ){
+        cb( model, response );
+      }
+    });
+  },
+
   channels : function(){
-    $('#channels-cont').show();
+    $('#channels-list').empty();
+    $('#channels-list').show();
     $('#messages-list').hide();
 
     app.channels = app.channels || new app.ChannelList;
 
     app.channelListView = app.channelListView || new app.ChannelListView( { el: '#channels-list', collection : app.channels } );
 
-    //check in local storge first!!!!
-    app.channels.fetch({
-      error : function(){
-        console.log( "ERROR BITCHES" );
-      },
-      success : function( model, response ){
-        console.log( model );
-        app.channelListView.render();
-      }
+    this.getChannels( function( model, response ){
+      console.log( model );
+      app.channelListView.render();
     });
   }
 });
@@ -117,5 +142,4 @@ app.Router = Backbone.Router.extend({
 $(function(){
   app.router = new app.Router;
   Backbone.history.start({pushState: true});
-  //app.router.navigate("channels", {trigger: true});
 });
