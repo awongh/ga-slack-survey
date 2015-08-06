@@ -89,7 +89,7 @@ app.use(express.static('public'));
 
 app.use(session({
     secret: 'keylkjlkjlkjboard cat',
-    store: new RedisStore {client: redis}
+    store: new RedisStore({client: redisClient})
 }));
 
 app.use(passport.initialize());
