@@ -1,4 +1,4 @@
-const client_id = "2154860972.8331037539";
+const client_id = process.env.CLIENT_ID;
 
 /*
  *
@@ -7,6 +7,10 @@ const client_id = "2154860972.8331037539";
                     SLACK_CLIENT_SECRET
                     SLASH_CMD_TOKEN
                     REDIS_URL
+                    CLIENT_ID
+
+                    //localhost only:
+                    PORT
  */
 
 var express = require('express')
@@ -106,7 +110,7 @@ app.use(express.static('public'));
 
 app.get('/', ensureAuthenticated, function( req, res ){
 //app.get('/', function( req, res ){
-  res.sendfile('./public/app.html');
+  res.sendFile("public/app.html", {"root": __dirname});
 });
 
 
@@ -128,11 +132,11 @@ app.get('/channels', function(req, res){
 
   getToken( req.user.id, function(err, token){
 
-    Slack.group.list({token:token}, function (error, data) {
+    Slack.groups.list({token:token}, function (error, data) {
 
       if( error ) throw error;
 
-      res.json( data.channels );
+      res.json( data.groups );
     });
   });
 
@@ -144,9 +148,6 @@ app.get('/channels', function(req, res){
 app.get('/channels/:channel_id', function(req, res){
 
   var channel_id = req.params.channel_id;
-
-  //debug
-  var channel_id = 'C06SUUTNJ';
 
   redisClient.lrange(channel_id, 0, 100, function( err, reply ){
     if( err ) throw err;
@@ -217,6 +218,7 @@ app.post('/slash', function( req, res ){
 
       var hash_string = JSON.stringify( message );
 
+      console.log("about to redis", req.body.channel_id, hash_string);
       redisClient.lpush(req.body.channel_id, hash_string);
 
     }else{
@@ -225,7 +227,7 @@ app.post('/slash', function( req, res ){
 
   }catch( error ){
     //silently deal with things that go wrong
-    console.log( error );
+    console.log( "slash error", error );
   }
 });
 
@@ -243,7 +245,8 @@ app.get('/authCallback',
     { failureRedirect: '/login?m='+'passport auth login failed' }
   ),
   function(req, res) {
-    console.log( "DID IT GUYZZZ", req.user );
+    //console.log( "DID IT GUYZZZ", req.user );
+    console.log( "DID IT GUYZZZ" );
     if( req && req.user && req.user.id ){
 
       getUser( req.user.id , function(err,user){
@@ -264,8 +267,11 @@ app.get('/authCallback',
 );
 
 function ensureAuthenticated(req, res, next) {
-  console.log( "ensure auth", req, res );
-  if (req.isAuthenticated()) { return next(); }
+  console.log( "ensure auth" );
+  if (req.isAuthenticated()) {
+    console.log( "about to do next" );
+    return next();
+  }
   console.log( "ensure auth redirect" );
   res.redirect('/login?m='+'not authorized')
 }
