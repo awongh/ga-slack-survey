@@ -88,6 +88,8 @@ app.use(methodOverride());
 app.use(express.static('public'));
 
 app.use(session({
+    resave: true,
+    saveUninitialized: true,
     secret: 'keylkjlkjlkjboard cat',
     store: new RedisStore({client: redisClient})
 }));
