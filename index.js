@@ -31,12 +31,7 @@ var logger = require('morgan');
 
 var session = require('express-session')
 
-
 var RedisStore = require('connect-redis')(session);
-var RD = new RedisStore({
-  host: redisURL.hostname,
-  port: redisURL.port
-});
 
 var bodyParser = require('body-parser')
 var cookieParser = require('cookie-parser')
@@ -94,7 +89,7 @@ app.use(express.static('public'));
 
 app.use(session({
     secret: 'keylkjlkjlkjboard cat',
-    store: RD
+    store: new RedisStore {client: redis}
 }));
 
 app.use(passport.initialize());
@@ -254,6 +249,7 @@ app.get('/authCallback',
           if(!err){
             res.redirect('/');
           }else{
+            console.log( "ERROR WITH req.login", err );
             res.redirect('/login?m='+'user not found error')
           }
         })
@@ -266,7 +262,9 @@ app.get('/authCallback',
 );
 
 function ensureAuthenticated(req, res, next) {
+  console.log( "ensure auth", req, res );
   if (req.isAuthenticated()) { return next(); }
+  console.log( "ensure auth redirect" );
   res.redirect('/login?m='+'not authorized')
 }
 
